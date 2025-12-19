@@ -25,6 +25,7 @@ export interface Dataset {
   process: PipefyProcess;
   cases: TestCase[];
   description: string;
+  agentContext?: string;
 }
 
 export interface EvalResult {

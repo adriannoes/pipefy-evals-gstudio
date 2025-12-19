@@ -17,6 +17,7 @@ const MOCK_DATASETS: Dataset[] = [
     name: 'IT Helpdesk Classification',
     process: PipefyProcess.IT_HELPDESK,
     description: 'Classify support tickets into urgent/non-urgent and categories.',
+    agentContext: 'Focus on identifying urgency based on keywords like "blocked", "meeting", "error".',
     cases: [
       { id: 'c1', input: 'My laptop screen is completely black and I have a client meeting in 10 mins!', expectedOutput: 'Urgency: High, Category: Hardware' },
       { id: 'c2', input: 'I need to install VS Code for the new intern.', expectedOutput: 'Urgency: Low, Category: Software Request' },
@@ -219,6 +220,12 @@ const App: React.FC = () => {
                                 <span className="text-sm text-gray-400">{ds.cases.length} cases</span>
                              </div>
                              <p className="text-gray-600 mb-4">{ds.description}</p>
+                             {ds.agentContext && (
+                                <div className="mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                    <h5 className="text-xs font-bold text-blue-800 uppercase mb-1">Agent Context</h5>
+                                    <p className="text-sm text-blue-900">{ds.agentContext}</p>
+                                </div>
+                             )}
                              <div className="border-t border-gray-100 pt-4">
                                 <h4 className="text-sm font-semibold text-gray-700 mb-2">Sample Data</h4>
                                 <div className="space-y-2">

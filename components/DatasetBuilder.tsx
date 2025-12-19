@@ -10,6 +10,7 @@ interface DatasetBuilderProps {
 const DatasetBuilder: React.FC<DatasetBuilderProps> = ({ onSave, onCancel }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [agentContext, setAgentContext] = useState('');
   const [process, setProcess] = useState<PipefyProcess>(PipefyProcess.IT_HELPDESK);
   const [cases, setCases] = useState<Omit<TestCase, 'id'>[]>([
     { input: '', expectedOutput: '' }
@@ -39,6 +40,7 @@ const DatasetBuilder: React.FC<DatasetBuilderProps> = ({ onSave, onCancel }) => 
       id: crypto.randomUUID(),
       name,
       description,
+      agentContext,
       process,
       cases: cases.map(c => ({
         id: crypto.randomUUID(),
@@ -109,6 +111,15 @@ const DatasetBuilder: React.FC<DatasetBuilderProps> = ({ onSave, onCancel }) => 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe the purpose of this test set..."
+                  className="w-full border border-gray-300 rounded-lg p-3 h-20 focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none resize-none"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Agent Context (Optional)</label>
+                <textarea 
+                  value={agentContext}
+                  onChange={(e) => setAgentContext(e.target.value)}
+                  placeholder="Additional context or rules for the agent (e.g. 'Use formal tone', 'Budget limits: $500', 'Process ID: 123')..."
                   className="w-full border border-gray-300 rounded-lg p-3 h-20 focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none resize-none"
                 />
               </div>
