@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, CheckCircle, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
+import { Play, CheckCircle, AlertCircle, Loader2, ArrowRight, Search, ChevronDown } from 'lucide-react';
 import { AgentConfig, Dataset, EvalResult, EvalRun, EvalStatus } from '../types';
 import { runAgentTask, evaluateResponse } from '../services/geminiService';
 
@@ -46,17 +46,25 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
   const [currentProgress, setCurrentProgress] = useState(0);
   const [results, setResults] = useState<EvalResult[]>([]);
   const [currentCaseIndex, setCurrentCaseIndex] = useState(0);
+  
+  // Dropdown State
+  const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false);
+  const [agentSearchQuery, setAgentSearchQuery] = useState('');
 
   const selectedDataset = datasets.find(d => d.id === selectedDatasetId);
 
-  const handleAgentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const agentId = e.target.value;
-    setSelectedAgentId(agentId);
-    
-    const preset = AGENT_PRESETS.find(p => p.id === agentId);
+  const filteredPresets = AGENT_PRESETS.filter(p => 
+    p.label.toLowerCase().includes(agentSearchQuery.toLowerCase())
+  );
+
+  const handleAgentSelect = (presetId: string) => {
+    setSelectedAgentId(presetId);
+    const preset = AGENT_PRESETS.find(p => p.id === presetId);
     if (preset && preset.id !== 'custom') {
       setSystemPrompt(preset.prompt);
     }
+    setIsAgentDropdownOpen(false);
+    setAgentSearchQuery('');
   };
 
   const handleStartEval = async () => {
@@ -135,18 +143,66 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
         {/* Left Column: Configuration */}
         <div className="w-1/3 p-6 border-r border-gray-100 overflow-y-auto">
           <div className="space-y-6">
-             <div>
+             <div className="relative">
               <label className="block text-sm font-semibold text-gray-700 mb-2">Agent Persona</label>
-              <select 
-                value={selectedAgentId}
-                onChange={handleAgentChange}
+              
+              {/* Overlay to handle click outside */}
+              {isAgentDropdownOpen && (
+                <div className="fixed inset-0 z-10" onClick={() => setIsAgentDropdownOpen(false)}></div>
+              )}
+
+              {/* Custom Searchable Select Trigger */}
+              <button
+                onClick={() => {
+                    if (status !== EvalStatus.RUNNING) {
+                        setIsAgentDropdownOpen(!isAgentDropdownOpen);
+                    }
+                }}
                 disabled={status === EvalStatus.RUNNING}
-                className="w-full border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none"
+                className="relative w-full border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none flex justify-between items-center text-left disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
-                {AGENT_PRESETS.map(preset => (
-                  <option key={preset.id} value={preset.id}>{preset.label}</option>
-                ))}
-              </select>
+                <span className={selectedAgentId ? "text-gray-900" : "text-gray-500"}>
+                    {AGENT_PRESETS.find(p => p.id === selectedAgentId)?.label || "Select Agent..."}
+                </span>
+                <ChevronDown size={16} className="text-gray-500" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isAgentDropdownOpen && (
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100">
+                    <div className="p-2 border-b border-gray-100 bg-gray-50 sticky top-0">
+                        <div className="relative">
+                            <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search agents..."
+                                value={agentSearchQuery}
+                                onChange={(e) => setAgentSearchQuery(e.target.value)}
+                                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-[#0085FF] placeholder-gray-400"
+                                autoFocus
+                            />
+                        </div>
+                    </div>
+                    <div className="overflow-y-auto max-h-48">
+                        {filteredPresets.map(preset => (
+                            <div
+                                key={preset.id}
+                                onClick={() => handleAgentSelect(preset.id)}
+                                className={`px-4 py-2 text-sm cursor-pointer hover:bg-blue-50 transition-colors border-l-2 ${
+                                    selectedAgentId === preset.id 
+                                    ? 'bg-blue-50/50 text-[#0085FF] font-medium border-[#0085FF]' 
+                                    : 'text-gray-700 border-transparent'
+                                }`}
+                            >
+                                {preset.label}
+                            </div>
+                        ))}
+                        {filteredPresets.length === 0 && (
+                            <div className="px-4 py-3 text-sm text-gray-400 text-center">No agents found</div>
+                        )}
+                    </div>
+                </div>
+              )}
             </div>
 
             <div>
