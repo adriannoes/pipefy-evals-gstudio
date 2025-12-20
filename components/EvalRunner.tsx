@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, CheckCircle, AlertCircle, Loader2, ArrowRight, Search, ChevronDown } from 'lucide-react';
+import { Play, CheckCircle, AlertCircle, Loader2, ArrowRight, Search, ChevronDown, Workflow } from 'lucide-react';
 import { AgentConfig, Dataset, EvalResult, EvalRun, EvalStatus } from '../types';
 import { runAgentTask, evaluateResponse } from '../services/geminiService';
 
@@ -8,39 +8,39 @@ interface EvalRunnerProps {
   onRunComplete: (run: EvalRun) => void;
 }
 
-const AGENT_PRESETS = [
+const TAXONOMY_PRESETS = [
   {
     id: 'custom',
-    label: 'Custom Agent',
+    label: 'Custom Process / Taxonomy',
     prompt: ''
   },
   {
-    id: 'it_helpdesk',
-    label: 'IT Helpdesk Agent',
-    prompt: 'You are an intelligent IT Helpdesk agent for Pipefy. Your task is to analyze support tickets, categorize them into specific domains (Hardware, Software, Network, Access), and determine the urgency level based on the user\'s tone and impact.'
+    id: 'it_service_desk',
+    label: 'IT Service Desk (Triage Phase)',
+    prompt: 'You are an AI Automation running inside a Pipefy "IT Service Desk" pipe. When a new card is created via email, your goal is to analyze the description to update the "Category" field (Hardware, Software, Access, Network) and the "SLA Priority" field (Critical, High, Medium, Low). Output the result in a structured format suited for field updates.'
   },
   {
-    id: 'purchase_process',
-    label: 'Purchase Process Agent',
-    prompt: 'You are a Procurement assistant in Pipefy. Analyze purchase requests to extract the vendor name, total amount, and list of items. Flag any high-value requests (over $1000) for manager approval.'
+    id: 'accounts_payable',
+    label: 'Finance - Accounts Payable (Invoice Extraction)',
+    prompt: 'You are an AI assistant in the "Accounts Payable" pipe. A new invoice request has arrived in the "Input" phase. Analyze the request text to extract data for the following Pipefy fields: "Vendor Name", "Invoice Amount", "Due Date", and suggest a "Cost Center" based on the purchase description.'
   },
   {
-    id: 'recruitment',
-    label: 'Recruitment Agent',
-    prompt: 'You are an HR Recruitment AI agent. Parse candidate applications to extract the applicant\'s name, desired position, years of experience, and top 3 skills. Summarize their fit for a senior role.'
+    id: 'recruiting',
+    label: 'HR - Recruiting (Candidate Screening)',
+    prompt: 'You are an AI Evaluator in the "Recruiting" pipe, specifically in the "Screening" phase. Analyze the candidate application text. Your task is to extract "Years of Experience", "Top 3 Skills", and provide a "Fit Score" (1-10) based on the requirement for a Senior Role.'
   },
   {
-    id: 'sales',
-    label: 'Sales Pipeline Agent',
-    prompt: 'You are a Sales Development Representative agent. Qualify incoming leads by extracting budget, timeline, and company size. Classify the lead as Hot, Warm, or Cold based on purchasing intent.'
+    id: 'sales_pipeline',
+    label: 'Sales - Lead Qualification (CRM)',
+    prompt: 'You are an AI automation for the "Sales Pipeline". A new lead card has entered the "Qualification" phase. Analyze the interaction history. Update the "Lead Temperature" field (Hot, Warm, Cold), extract the "Estimated Budget", and suggest the Next Action for the Sales Rep.'
   }
 ];
 
 const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
   const [selectedDatasetId, setSelectedDatasetId] = useState<string>(datasets[0]?.id || '');
-  const [selectedAgentId, setSelectedAgentId] = useState<string>('custom');
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('custom');
   // Default prompt if custom or initial load
-  const [systemPrompt, setSystemPrompt] = useState('You are a helpful Pipefy agent. Categorize the request and extract key entities.');
+  const [systemPrompt, setSystemPrompt] = useState('You are an AI automation within a Pipefy workflow. Analyze the input to update fields or move the card.');
   const [model, setModel] = useState('gemini-3-flash-preview');
   const [status, setStatus] = useState<EvalStatus>(EvalStatus.IDLE);
   const [currentProgress, setCurrentProgress] = useState(0);
@@ -48,23 +48,23 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
   const [currentCaseIndex, setCurrentCaseIndex] = useState(0);
   
   // Dropdown State
-  const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false);
-  const [agentSearchQuery, setAgentSearchQuery] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const selectedDataset = datasets.find(d => d.id === selectedDatasetId);
 
-  const filteredPresets = AGENT_PRESETS.filter(p => 
-    p.label.toLowerCase().includes(agentSearchQuery.toLowerCase())
+  const filteredPresets = TAXONOMY_PRESETS.filter(p => 
+    p.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAgentSelect = (presetId: string) => {
-    setSelectedAgentId(presetId);
-    const preset = AGENT_PRESETS.find(p => p.id === presetId);
+  const handlePresetSelect = (presetId: string) => {
+    setSelectedPresetId(presetId);
+    const preset = TAXONOMY_PRESETS.find(p => p.id === presetId);
     if (preset && preset.id !== 'custom') {
       setSystemPrompt(preset.prompt);
     }
-    setIsAgentDropdownOpen(false);
-    setAgentSearchQuery('');
+    setIsDropdownOpen(false);
+    setSearchQuery('');
   };
 
   const handleStartEval = async () => {
@@ -125,14 +125,14 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-full max-h-[800px] overflow-hidden">
-      <div className="p-6 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+    <div className="bg-[#1e293b] rounded-xl shadow-lg border border-slate-800 flex flex-col h-full max-h-[800px] overflow-hidden">
+      <div className="p-6 border-b border-slate-800 bg-[#0f172a] flex items-center justify-between">
         <div>
-           <h2 className="text-lg font-bold text-gray-900">Configure Evaluation</h2>
-           <p className="text-sm text-gray-500">Define your agent settings and select a ground-truth dataset.</p>
+           <h2 className="text-lg font-bold text-white">Configure Evaluation</h2>
+           <p className="text-sm text-slate-400">Select a Pipefy Taxonomy to test your AI automation.</p>
         </div>
         {status === EvalStatus.RUNNING && (
-             <div className="flex items-center gap-2 text-[#0085FF] bg-blue-50 px-3 py-1 rounded-full text-sm font-medium">
+             <div className="flex items-center gap-2 text-blue-400 bg-blue-900/20 px-3 py-1 rounded-full text-sm font-medium border border-blue-900/50">
                 <Loader2 className="animate-spin" size={16} />
                 Processing Case {currentCaseIndex + 1}/{selectedDataset?.cases.length}
              </div>
@@ -141,44 +141,46 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left Column: Configuration */}
-        <div className="w-1/3 p-6 border-r border-gray-100 overflow-y-auto">
+        <div className="w-1/3 p-6 border-r border-slate-800 overflow-y-auto bg-[#1e293b]">
           <div className="space-y-6">
              <div className="relative">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Agent Persona</label>
+              <label className="block text-sm font-semibold text-slate-300 mb-2 flex items-center gap-2">
+                <Workflow size={14} /> Pipefy Taxonomy
+              </label>
               
               {/* Overlay to handle click outside */}
-              {isAgentDropdownOpen && (
-                <div className="fixed inset-0 z-10" onClick={() => setIsAgentDropdownOpen(false)}></div>
+              {isDropdownOpen && (
+                <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)}></div>
               )}
 
               {/* Custom Searchable Select Trigger */}
               <button
                 onClick={() => {
                     if (status !== EvalStatus.RUNNING) {
-                        setIsAgentDropdownOpen(!isAgentDropdownOpen);
+                        setIsDropdownOpen(!isDropdownOpen);
                     }
                 }}
                 disabled={status === EvalStatus.RUNNING}
-                className="relative w-full border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none flex justify-between items-center text-left disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="relative w-full border border-slate-700 rounded-lg p-2.5 bg-[#020617] text-slate-200 focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none flex justify-between items-center text-left disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors hover:border-slate-600"
               >
-                <span className={selectedAgentId ? "text-gray-900" : "text-gray-500"}>
-                    {AGENT_PRESETS.find(p => p.id === selectedAgentId)?.label || "Select Agent..."}
+                <span className={selectedPresetId ? "text-slate-200" : "text-slate-500"}>
+                    {TAXONOMY_PRESETS.find(p => p.id === selectedPresetId)?.label || "Select Taxonomy..."}
                 </span>
-                <ChevronDown size={16} className="text-gray-500" />
+                <ChevronDown size={16} className="text-slate-500" />
               </button>
 
               {/* Dropdown Menu */}
-              {isAgentDropdownOpen && (
-                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100">
-                    <div className="p-2 border-b border-gray-100 bg-gray-50 sticky top-0">
+              {isDropdownOpen && (
+                <div className="absolute z-20 w-full mt-1 bg-[#1e293b] border border-slate-700 rounded-lg shadow-xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100">
+                    <div className="p-2 border-b border-slate-700 bg-[#0f172a] sticky top-0">
                         <div className="relative">
-                            <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
+                            <Search size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
                             <input
                                 type="text"
-                                placeholder="Search agents..."
-                                value={agentSearchQuery}
-                                onChange={(e) => setAgentSearchQuery(e.target.value)}
-                                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-[#0085FF] placeholder-gray-400"
+                                placeholder="Search Pipefy taxonomies..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-700 bg-[#1e293b] text-white rounded-md focus:outline-none focus:border-[#0085FF] placeholder-slate-500"
                                 autoFocus
                             />
                         </div>
@@ -187,18 +189,18 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
                         {filteredPresets.map(preset => (
                             <div
                                 key={preset.id}
-                                onClick={() => handleAgentSelect(preset.id)}
-                                className={`px-4 py-2 text-sm cursor-pointer hover:bg-blue-50 transition-colors border-l-2 ${
-                                    selectedAgentId === preset.id 
-                                    ? 'bg-blue-50/50 text-[#0085FF] font-medium border-[#0085FF]' 
-                                    : 'text-gray-700 border-transparent'
+                                onClick={() => handlePresetSelect(preset.id)}
+                                className={`px-4 py-2 text-sm cursor-pointer hover:bg-slate-800 transition-colors border-l-2 ${
+                                    selectedPresetId === preset.id 
+                                    ? 'bg-blue-900/20 text-[#0085FF] font-medium border-[#0085FF]' 
+                                    : 'text-slate-300 border-transparent'
                                 }`}
                             >
                                 {preset.label}
                             </div>
                         ))}
                         {filteredPresets.length === 0 && (
-                            <div className="px-4 py-3 text-sm text-gray-400 text-center">No agents found</div>
+                            <div className="px-4 py-3 text-sm text-slate-500 text-center">No taxonomies found</div>
                         )}
                     </div>
                 </div>
@@ -206,38 +208,38 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">System Instructions</label>
+              <label className="block text-sm font-semibold text-slate-300 mb-2">Process Instructions</label>
               <textarea 
                 value={systemPrompt}
                 onChange={(e) => {
                     setSystemPrompt(e.target.value);
-                    setSelectedAgentId('custom'); // Switch to custom if user edits manually
+                    setSelectedPresetId('custom'); // Switch to custom if user edits manually
                 }}
                 disabled={status === EvalStatus.RUNNING}
-                className="w-full h-32 border border-gray-300 rounded-lg p-3 text-sm bg-white focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none resize-none font-mono"
-                placeholder="Define how the agent should behave..."
+                className="w-full h-32 border border-slate-700 rounded-lg p-3 text-sm bg-[#020617] text-slate-200 focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none resize-none font-mono placeholder-slate-600 disabled:bg-slate-800 disabled:text-slate-500"
+                placeholder="Define the prompt for the pipe automation..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Select Dataset</label>
+              <label className="block text-sm font-semibold text-slate-300 mb-2">Select Dataset</label>
               <select 
                 value={selectedDatasetId}
                 onChange={(e) => setSelectedDatasetId(e.target.value)}
                 disabled={status === EvalStatus.RUNNING}
-                className="w-full border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none transition-all"
+                className="w-full border border-slate-700 rounded-lg p-2.5 bg-[#020617] text-slate-200 focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none transition-all disabled:bg-slate-800 disabled:text-slate-500"
               >
                 {datasets.map(d => <option key={d.id} value={d.id}>{d.name} ({d.cases.length} cases)</option>)}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Model</label>
+              <label className="block text-sm font-semibold text-slate-300 mb-2">Model</label>
               <select 
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 disabled={status === EvalStatus.RUNNING}
-                className="w-full border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none"
+                className="w-full border border-slate-700 rounded-lg p-2.5 bg-[#020617] text-slate-200 focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none disabled:bg-slate-800 disabled:text-slate-500"
               >
                 <option value="gemini-3-flash-preview">gemini-3-flash-preview (Fast)</option>
                 <option value="gemini-3-pro-preview">gemini-3-pro-preview (Reasoning)</option>
@@ -250,8 +252,8 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
                 disabled={status === EvalStatus.RUNNING}
                 className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all ${
                     status === EvalStatus.RUNNING 
-                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                    : 'bg-[#0085FF] hover:bg-[#0069CC] text-white shadow-md hover:shadow-lg'
+                    ? 'bg-slate-700 text-slate-400 cursor-not-allowed' 
+                    : 'bg-[#0085FF] hover:bg-[#0069CC] text-white shadow-lg shadow-blue-900/30'
                 }`}
             >
                 {status === EvalStatus.RUNNING ? 'Evaluation in Progress...' : (
@@ -265,12 +267,12 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
         </div>
 
         {/* Right Column: Live Progress & Results */}
-        <div className="flex-1 bg-white flex flex-col">
+        <div className="flex-1 bg-[#1e293b] flex flex-col">
             {/* Progress Bar */}
             {status !== EvalStatus.IDLE && (
-                <div className="w-full bg-gray-100 h-1.5">
+                <div className="w-full bg-slate-800 h-1.5">
                     <div 
-                        className="bg-[#0085FF] h-1.5 transition-all duration-300 ease-out" 
+                        className="bg-[#0085FF] h-1.5 transition-all duration-300 ease-out shadow-[0_0_10px_#0085FF]" 
                         style={{ width: `${currentProgress}%` }}
                     />
                 </div>
@@ -278,47 +280,47 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
 
             <div className="flex-1 p-6 overflow-y-auto">
                 {results.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                            <Play size={32} className="text-gray-300 ml-1" />
+                    <div className="h-full flex flex-col items-center justify-center text-slate-500">
+                        <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                            <Workflow size={32} className="text-slate-600 ml-1" />
                         </div>
-                        <p className="font-medium">Ready to run</p>
-                        <p className="text-sm">Select an agent persona and dataset to start.</p>
+                        <p className="font-medium text-slate-400">Ready to run</p>
+                        <p className="text-sm">Select a taxonomy and dataset to start.</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
                         {results.map((result, idx) => (
                             <div key={idx} className={`border rounded-lg p-4 text-sm ${
-                                result.isPass ? 'border-green-100 bg-green-50/30' : 'border-red-100 bg-red-50/30'
+                                result.isPass ? 'border-green-900/50 bg-green-900/10' : 'border-red-900/50 bg-red-900/10'
                             }`}>
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-mono text-gray-500 text-xs">Case #{idx + 1}</span>
+                                        <span className="font-mono text-slate-500 text-xs">Case #{idx + 1}</span>
                                         {result.isPass ? (
-                                            <span className="flex items-center gap-1 text-green-700 font-bold bg-green-100 px-2 py-0.5 rounded text-xs">
+                                            <span className="flex items-center gap-1 text-green-400 font-bold bg-green-900/30 px-2 py-0.5 rounded text-xs border border-green-900/50">
                                                 <CheckCircle size={12} /> PASS
                                             </span>
                                         ) : (
-                                            <span className="flex items-center gap-1 text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded text-xs">
+                                            <span className="flex items-center gap-1 text-red-400 font-bold bg-red-900/30 px-2 py-0.5 rounded text-xs border border-red-900/50">
                                                 <AlertCircle size={12} /> FAIL
                                             </span>
                                         )}
-                                        <span className="text-xs text-gray-400">Score: {result.score.toFixed(2)}</span>
-                                        <span className="text-xs text-gray-400">Latency: {result.latencyMs}ms</span>
+                                        <span className="text-xs text-slate-400">Score: {result.score.toFixed(2)}</span>
+                                        <span className="text-xs text-slate-400">Latency: {result.latencyMs}ms</span>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Agent Output</p>
-                                        <p className="text-gray-900 bg-white p-2 rounded border border-gray-100">{result.actualOutput}</p>
+                                        <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Process Output</p>
+                                        <p className="text-slate-200 bg-[#020617] p-2 rounded border border-slate-700">{result.actualOutput}</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Ground Truth</p>
-                                        <p className="text-gray-600 bg-white p-2 rounded border border-gray-100">{result.expectedOutput}</p>
+                                        <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Ground Truth</p>
+                                        <p className="text-slate-400 bg-[#020617] p-2 rounded border border-slate-700">{result.expectedOutput}</p>
                                     </div>
                                 </div>
-                                <div className="mt-2 pt-2 border-t border-gray-100/50">
-                                     <p className="text-xs text-gray-500"><span className="font-semibold">Judge's Reasoning:</span> {result.reasoning}</p>
+                                <div className="mt-2 pt-2 border-t border-slate-700/50">
+                                     <p className="text-xs text-slate-400"><span className="font-semibold text-slate-300">Judge's Reasoning:</span> {result.reasoning}</p>
                                 </div>
                             </div>
                         ))}
@@ -326,12 +328,12 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
                 )}
             </div>
             {status === EvalStatus.COMPLETED && (
-                <div className="p-4 border-t border-gray-100 bg-green-50 flex justify-between items-center">
+                <div className="p-4 border-t border-slate-800 bg-green-900/10 flex justify-between items-center">
                     <div>
-                        <p className="font-bold text-green-900">Evaluation Complete</p>
-                        <p className="text-sm text-green-700">Check the Analysis tab for detailed metrics.</p>
+                        <p className="font-bold text-green-400">Evaluation Complete</p>
+                        <p className="text-sm text-green-300/70">Check the Analysis tab for detailed metrics.</p>
                     </div>
-                    <button className="text-green-800 font-semibold text-sm flex items-center gap-1 hover:underline">
+                    <button className="text-green-400 font-semibold text-sm flex items-center gap-1 hover:text-green-300 transition-colors">
                         View Analysis <ArrowRight size={16} />
                     </button>
                 </div>

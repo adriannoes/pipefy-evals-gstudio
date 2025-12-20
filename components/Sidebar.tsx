@@ -15,15 +15,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   ];
 
   return (
-    <div className="w-64 bg-[#0B2538] text-white flex flex-col h-screen fixed left-0 top-0 z-10 shadow-xl">
-      <div className="p-6 border-b border-[#1E3A52]">
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#90E0EF] rounded-lg flex items-center justify-center text-[#0B2538]">
+    <div className="w-64 bg-[#0f172a] text-slate-300 flex flex-col h-screen fixed left-0 top-0 z-10 shadow-xl border-r border-slate-800">
+      <div className="p-6 border-b border-slate-800">
+        <h1 className="text-xl font-bold flex items-center gap-2 text-white">
+          <div className="w-8 h-8 bg-[#0085FF] rounded-lg flex items-center justify-center text-white">
              P
           </div>
           Pipefy Evals
         </h1>
-        <p className="text-xs text-gray-400 mt-1">AI Assurance Platform</p>
+        <p className="text-xs text-slate-500 mt-1">AI Assurance Platform</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">
@@ -36,8 +36,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 isActive
-                  ? 'bg-[#0085FF] text-white shadow-lg'
-                  : 'text-gray-400 hover:bg-[#1E3A52] hover:text-white'
+                  ? 'bg-[#0085FF] text-white shadow-lg shadow-blue-900/20'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
               }`}
             >
               <Icon size={20} />
@@ -47,8 +47,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
         })}
       </nav>
 
-      <div className="p-4 border-t border-[#1E3A52]">
-        <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white transition-colors">
+      <div className="p-4 border-t border-slate-800">
+        <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors hover:bg-slate-800 rounded-lg">
           <Settings size={20} />
           <span>Settings</span>
         </button>
