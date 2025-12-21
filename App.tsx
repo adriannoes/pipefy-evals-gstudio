@@ -6,7 +6,7 @@ import {
 import { 
   CheckCircle2, XCircle, Clock, Zap, FileText, BarChart3, 
   ArrowLeft, Filter, RotateCcw, Download, ExternalLink,
-  ChevronRight, Search, Activity
+  ChevronRight, Search, Activity, Trash2
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import EvalRunner from './components/EvalRunner';
@@ -63,6 +63,12 @@ const App: React.FC = () => {
   const handleSaveDataset = (newDataset: Dataset) => {
     setDatasets([newDataset, ...datasets]);
     setIsCreatingDataset(false);
+  };
+
+  const handleDeleteDataset = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this dataset? This action cannot be undone.')) {
+      setDatasets(prev => prev.filter(d => d.id !== id));
+    }
   };
 
   const getLatestRun = () => evalHistory[0];
@@ -241,7 +247,19 @@ const App: React.FC = () => {
                                     <h3 className="text-lg font-bold text-white group-hover:text-[#0085FF] transition-colors">{ds.name}</h3>
                                     <span className="inline-block mt-1 px-2 py-0.5 bg-blue-900/30 text-blue-400 text-[10px] font-bold uppercase tracking-wider rounded border border-blue-900/50">{ds.process}</span>
                                 </div>
-                                <span className="text-xs text-slate-500 font-mono bg-slate-900 px-2 py-1 rounded">{ds.cases.length} cases</span>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xs text-slate-500 font-mono bg-slate-900 px-2 py-1 rounded">{ds.cases.length} cases</span>
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteDataset(ds.id);
+                                        }}
+                                        className="text-slate-500 hover:text-red-400 transition-colors p-1.5 hover:bg-red-900/20 rounded-md"
+                                        title="Delete Dataset"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
                              </div>
                              <p className="text-slate-400 text-sm mb-4 line-clamp-2">{ds.description}</p>
                              {ds.agentContext && (

@@ -12,26 +12,31 @@ const TAXONOMY_PRESETS = [
   {
     id: 'custom',
     label: 'Custom Process / Taxonomy',
+    description: 'Define your own prompt manually for any specific Pipefy process.',
     prompt: ''
   },
   {
     id: 'it_service_desk',
     label: 'IT Service Desk (Triage Phase)',
+    description: 'Analyzes ticket descriptions to categorize issues (Hardware, Software) and assign SLA priority.',
     prompt: 'You are an AI Automation running inside a Pipefy "IT Service Desk" pipe. When a new card is created via email, your goal is to analyze the description to update the "Category" field (Hardware, Software, Access, Network) and the "SLA Priority" field (Critical, High, Medium, Low). Output the result in a structured format suited for field updates.'
   },
   {
     id: 'accounts_payable',
     label: 'Finance - Accounts Payable (Invoice Extraction)',
+    description: 'Extracts invoice details like Vendor Name, Amount, and Due Date from request text.',
     prompt: 'You are an AI assistant in the "Accounts Payable" pipe. A new invoice request has arrived in the "Input" phase. Analyze the request text to extract data for the following Pipefy fields: "Vendor Name", "Invoice Amount", "Due Date", and suggest a "Cost Center" based on the purchase description.'
   },
   {
     id: 'recruiting',
     label: 'HR - Recruiting (Candidate Screening)',
+    description: 'Screens candidate applications to extract skills, experience, and calculate a fit score.',
     prompt: 'You are an AI Evaluator in the "Recruiting" pipe, specifically in the "Screening" phase. Analyze the candidate application text. Your task is to extract "Years of Experience", "Top 3 Skills", and provide a "Fit Score" (1-10) based on the requirement for a Senior Role.'
   },
   {
     id: 'sales_pipeline',
     label: 'Sales - Lead Qualification (CRM)',
+    description: 'Qualifies sales leads by determining temperature, budget, and suggesting next actions.',
     prompt: 'You are an AI automation for the "Sales Pipeline". A new lead card has entered the "Qualification" phase. Analyze the interaction history. Update the "Lead Temperature" field (Hot, Warm, Cold), extract the "Estimated Budget", and suggest the Next Action for the Sales Rep.'
   }
 ];
@@ -54,7 +59,8 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
   const selectedDataset = datasets.find(d => d.id === selectedDatasetId);
 
   const filteredPresets = TAXONOMY_PRESETS.filter(p => 
-    p.label.toLowerCase().includes(searchQuery.toLowerCase())
+    p.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handlePresetSelect = (presetId: string) => {
@@ -163,10 +169,17 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
                 disabled={status === EvalStatus.RUNNING}
                 className="relative w-full border border-slate-700 rounded-lg p-2.5 bg-[#020617] text-slate-200 focus:ring-2 focus:ring-[#0085FF] focus:border-[#0085FF] outline-none flex justify-between items-center text-left disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors hover:border-slate-600"
               >
-                <span className={selectedPresetId ? "text-slate-200" : "text-slate-500"}>
-                    {TAXONOMY_PRESETS.find(p => p.id === selectedPresetId)?.label || "Select Taxonomy..."}
-                </span>
-                <ChevronDown size={16} className="text-slate-500" />
+                <div className="flex flex-col overflow-hidden">
+                    <span className={selectedPresetId ? "text-slate-200 truncate" : "text-slate-500"}>
+                        {TAXONOMY_PRESETS.find(p => p.id === selectedPresetId)?.label || "Select Taxonomy..."}
+                    </span>
+                    {selectedPresetId && (
+                         <span className="text-[10px] text-slate-500 truncate">
+                            {TAXONOMY_PRESETS.find(p => p.id === selectedPresetId)?.description}
+                         </span>
+                    )}
+                </div>
+                <ChevronDown size={16} className="text-slate-500 shrink-0 ml-2" />
               </button>
 
               {/* Dropdown Menu */}
@@ -177,7 +190,7 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
                             <Search size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
                             <input
                                 type="text"
-                                placeholder="Search Pipefy taxonomies..."
+                                placeholder="Search by name or capability..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-700 bg-[#1e293b] text-white rounded-md focus:outline-none focus:border-[#0085FF] placeholder-slate-500"
@@ -185,18 +198,23 @@ const EvalRunner: React.FC<EvalRunnerProps> = ({ datasets, onRunComplete }) => {
                             />
                         </div>
                     </div>
-                    <div className="overflow-y-auto max-h-48">
+                    <div className="overflow-y-auto max-h-64">
                         {filteredPresets.map(preset => (
                             <div
                                 key={preset.id}
                                 onClick={() => handlePresetSelect(preset.id)}
-                                className={`px-4 py-2 text-sm cursor-pointer hover:bg-slate-800 transition-colors border-l-2 ${
+                                className={`px-4 py-3 cursor-pointer hover:bg-slate-800 transition-colors border-l-2 ${
                                     selectedPresetId === preset.id 
-                                    ? 'bg-blue-900/20 text-[#0085FF] font-medium border-[#0085FF]' 
-                                    : 'text-slate-300 border-transparent'
+                                    ? 'bg-blue-900/20 border-[#0085FF]' 
+                                    : 'border-transparent'
                                 }`}
                             >
-                                {preset.label}
+                                <div className={`text-sm font-medium ${selectedPresetId === preset.id ? 'text-[#0085FF]' : 'text-slate-200'}`}>
+                                    {preset.label}
+                                </div>
+                                <div className="text-xs text-slate-500 mt-1 line-clamp-2">
+                                    {preset.description}
+                                </div>
                             </div>
                         ))}
                         {filteredPresets.length === 0 && (
