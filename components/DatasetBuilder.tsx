@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Save, X, FileText, Database } from 'lucide-react';
+import { Plus, Trash2, Save, X, FileText, Database, Info } from 'lucide-react';
 import { Dataset, PipefyProcess, TestCase } from '../types';
 
 interface DatasetBuilderProps {
@@ -159,21 +159,27 @@ const DatasetBuilder: React.FC<DatasetBuilderProps> = ({ onSave, onCancel }) => 
 
                   <div className="grid grid-cols-2 gap-6 mt-6">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Input (Card Content)</label>
+                      <div className="flex flex-col mb-2">
+                        <label className="block text-xs font-semibold text-slate-300 uppercase">Input (Card Content)</label>
+                        <span className="text-[10px] text-slate-500 italic mt-0.5">Example: "New invoice from Amazon for $150.40 due on Dec 1st."</span>
+                      </div>
                       <textarea 
                         value={testCase.input}
                         onChange={(e) => handleCaseChange(index, 'input', e.target.value)}
                         placeholder="e.g. Email body, Description text..."
-                        className="w-full border border-slate-700 bg-[#020617] text-white rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#0085FF] outline-none h-24 resize-none placeholder-slate-600"
+                        className="w-full border border-slate-700 bg-[#020617] text-white rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#0085FF] outline-none h-28 resize-none placeholder-slate-600"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Expected Output (Field Updates)</label>
+                      <div className="flex flex-col mb-2">
+                        <label className="block text-xs font-semibold text-slate-300 uppercase">Expected Output (Field Updates)</label>
+                        <span className="text-[10px] text-slate-500 italic mt-0.5">Example: "Field: Vendor = Amazon; Field: Amount = 150.40; Field: Due Date = 12/01"</span>
+                      </div>
                       <textarea 
                         value={testCase.expectedOutput}
                         onChange={(e) => handleCaseChange(index, 'expectedOutput', e.target.value)}
                         placeholder="e.g. Field: Category = Hardware; Field: Urgency = High"
-                        className="w-full border border-slate-700 bg-[#020617] text-white rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#0085FF] outline-none h-24 resize-none placeholder-slate-600"
+                        className="w-full border border-slate-700 bg-[#020617] text-white rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#0085FF] outline-none h-28 resize-none placeholder-slate-600"
                       />
                     </div>
                   </div>
